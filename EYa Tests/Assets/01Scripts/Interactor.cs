@@ -21,6 +21,8 @@ public class Interactor : MonoBehaviour
     public GameObject itemBeingSeen;
     bool isHolding = false;
     public float maxPickupDistance = 10f;
+    //Crosshair
+    public bool crossHairActive;
 
     void Update()
     {
@@ -33,6 +35,11 @@ public class Interactor : MonoBehaviour
 
         if (Input.GetKey(KeyCode.Z)) PickupItem();
         if (Input.GetKey(KeyCode.X)) DropItem();
+
+        //if(itemBeingSeen != null)
+        //{
+        //    CrossHairColour.instance.SetCrossHairColour(itemBeingSeen);
+        //}
     }//end update
 
 
@@ -48,7 +55,7 @@ public class Interactor : MonoBehaviour
             {
                 Interactable newInteractable = hit.collider.GetComponent<Interactable>();   // If interactable object is hit, 
                 Debug.Log("Sees Object." + hit.collider.gameObject.name);
-                // If there is a currentInteractable and it is not the newInteractable, overlappign items,
+                // If there is a currentInteractable and it is not the newInteractable, overlapping items,
                 if (currentInteractable && newInteractable != currentInteractable)
                 {
                     currentInteractable.DisableOutline();
@@ -73,6 +80,7 @@ public class Interactor : MonoBehaviour
                 itemBeingSeen = hit.collider.gameObject;
                 PlayerMovement.instance.SetPunchableObject(hit.collider.gameObject);
                 Debug.Log("Set hittableObject to" + hit.collider.gameObject.name);
+                EnableCrossHairActive();
             }
             else //If object is not interactable.
             {
@@ -95,7 +103,7 @@ public class Interactor : MonoBehaviour
     {
         currentInteractable = newInteractable;
         currentInteractable.EnableOutline();
-
+        EnableCrossHairActive();
     }
 
     void DisableCurrentInteractable()
@@ -104,10 +112,23 @@ public class Interactor : MonoBehaviour
         {
             currentInteractable.DisableOutline();
             currentInteractable = null;
+            DisableCrossHairActive();
         }
     }
 
+    public void EnableCrossHairActive()
+    {
+        CrossHairColour.instance.SetCrossHairColour(true);
+        crossHairActive = true;
+    }
 
+    public void DisableCrossHairActive()
+    {
+        CrossHairColour.instance.SetCrossHairColour(false);
+        crossHairActive = false;
+    }
+
+    #region Pickups
     void PickupItem()
     {
         if (itemBeingSeen != null)
@@ -143,6 +164,8 @@ public class Interactor : MonoBehaviour
             itemCurrentlyHolding = null;
         }
     }
+
+    #endregion
 }
 
 
