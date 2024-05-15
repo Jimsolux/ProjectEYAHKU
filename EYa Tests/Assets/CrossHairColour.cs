@@ -11,11 +11,15 @@ public class CrossHairColour : MonoBehaviour
     public Image crossHair;
     public static CrossHairColour instance;
 
-    private void Start()
+    private void Awake()
     {
         instance = this;
         crossHair = GetComponent<Image>();
         crossHair.color = crossHairColourInactive;
+    }
+    private void Start()
+    {
+        
     }
 
     public void SetCrossHairColour(bool active)
@@ -25,7 +29,7 @@ public class CrossHairColour : MonoBehaviour
             crossHair.color = crossHairColourActive;
             crossHairActive = true;
         }
-        else
+        if(!active)
         {
             crossHair.color = crossHairColourInactive;
             crossHairActive = false;
