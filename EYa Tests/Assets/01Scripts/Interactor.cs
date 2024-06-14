@@ -1,6 +1,4 @@
-using System;
-using System.Collections;
-using System.Collections.Generic;
+using Unity.VisualScripting;
 using UnityEngine;
 
 interface IInteractable
@@ -12,8 +10,10 @@ public class Interactor : MonoBehaviour
 {
 
     public Transform InteractorSource;
-    public float InteractRange = 50f;
+    public float InteractRange = 5f;
     Interactable currentInteractable;
+    public int currentInteractableID = -1;
+    private bool canInteractCusIHaveInteractable;
 
     //PickupSystem
     public GameObject itemHoldSlot;
@@ -22,12 +22,13 @@ public class Interactor : MonoBehaviour
     bool isHolding = false;
     public float maxPickupDistance = 10f;
     //Crosshair
+    [SerializeField] CrossHairColour crosshairColour;
     public bool crossHairActive;
 
     void Update()
     {
         CheckInteraction();
-        if (Input.GetKey(KeyCode.E) && currentInteractable != null)
+        if (Input.GetKey(KeyCode.E) && canInteractCusIHaveInteractable)
         {
             Debug.Log("Should Check interaction");
             currentInteractable.Interact();
@@ -48,27 +49,37 @@ public class Interactor : MonoBehaviour
         RaycastHit hit;
         Ray ray = new Ray(InteractorSource.transform.position, InteractorSource.transform.forward);   // Creates new Ray forwards from Camera
         Debug.DrawRay(InteractorSource.transform.position, InteractorSource.transform.forward * 10f, Color.green, 3.0f);
-        Debug.Log("Ray has been shot");
+        //Debug.Log("Ray has been shot");
         if (Physics.Raycast(ray, out hit, InteractRange))  // if Ray hits something in InteractRange (hit = true) , out hitInfo
         {
             if (hit.collider.tag == "Interactable")
             {
-                Interactable newInteractable = hit.collider.GetComponent<Interactable>();   // If interactable object is hit, 
                 Debug.Log("Sees Object." + hit.collider.gameObject.name);
+                Interactable newInteractable = hit.collider.GetComponent<Interactable>();   // If interactable object is hit, 
                 // If there is a currentInteractable and it is not the newInteractable, overlapping items,
-                if (currentInteractable && newInteractable != currentInteractable)
-                {
-                    currentInteractable.DisableOutline();
-                }
-                if (newInteractable.enabled)
+                //if (currentInteractable && newInteractable != currentInteractable)
+                //{
+                //    currentInteractable.DisableOutline();
+                //}
+                if (newInteractable != null && newInteractable != currentInteractable)
                 {
                     SetNewCurrentInteractable(newInteractable);
+                    Debug.Log("SetCurrentInteractable");
                 }
+            else //If object is not interactable.
+            {
+                DisableCurrentInteractable();
+                PlayerMovement.instance.hittableObject = null;
+                itemBeingSeen = null;
+                Debug.Log("Disabled cus the object is not interactable.");
 
-                else //If new interactable is not enabled.
-                {
-                    DisableCurrentInteractable();
-                }
+            }
+
+                //else //If new interactable is not enabled.
+                //{
+                //    DisableCurrentInteractable();
+                //    Debug.Log("Disabled cus new interactable was null");
+                //}
             }
             if (hit.collider.tag == "Punchable")
             {
@@ -82,12 +93,6 @@ public class Interactor : MonoBehaviour
                 Debug.Log("Set hittableObject to" + hit.collider.gameObject.name);
                 EnableCrossHairActive();
             }
-            else //If object is not interactable.
-            {
-                DisableCurrentInteractable();
-                PlayerMovement.instance.hittableObject = null;
-                itemBeingSeen = null;
-            }
         }// end raycast
 
         else //If nothing within reach.
@@ -95,6 +100,8 @@ public class Interactor : MonoBehaviour
             DisableCurrentInteractable();
             PlayerMovement.instance.hittableObject = null;
             itemBeingSeen = null;
+            Debug.Log("Disabled cus I think I see no item.");
+
         }
 
     }// end Checkinteraction()
@@ -104,6 +111,14 @@ public class Interactor : MonoBehaviour
         currentInteractable = newInteractable;
         currentInteractable.EnableOutline();
         EnableCrossHairActive();
+        Debug.Log("Actually set the new currentinteractable");
+        if (itemCurrentlyHolding != null)
+        {
+            currentInteractableID = itemCurrentlyHolding.GetComponent<ObjectID>().myID;
+            Debug.Log("I took my ID from my item holding.");
+
+        }
+        canInteractCusIHaveInteractable = true;
     }
 
     void DisableCurrentInteractable()
@@ -112,19 +127,21 @@ public class Interactor : MonoBehaviour
         {
             currentInteractable.DisableOutline();
             currentInteractable = null;
-            DisableCrossHairActive();
+            currentInteractableID = -1;
         }
+        canInteractCusIHaveInteractable = false;
+        DisableCrossHairActive();
     }
 
     public void EnableCrossHairActive()
     {
-        CrossHairColour.instance.SetCrossHairColour(true);
+        crosshairColour.SetCrossHairColour(true);
         crossHairActive = true;
     }
 
     public void DisableCrossHairActive()
     {
-        CrossHairColour.instance.SetCrossHairColour(false);
+        crosshairColour.SetCrossHairColour(false);
         crossHairActive = false;
     }
 
@@ -149,6 +166,7 @@ public class Interactor : MonoBehaviour
         else { Debug.Log("attempted to pickup item but there wasnt any items seen."); }
     }
 
+    [SerializeField] LayerMask dropRayCastMask;
     void DropItem()
     {
         if (isHolding)
@@ -158,13 +176,29 @@ public class Interactor : MonoBehaviour
             foreach (var rb in itemCurrentlyHolding.GetComponentsInChildren<Rigidbody>()) if (rb != null) { rb.isKinematic = false; }
             isHolding = false;
             RaycastHit hitDown; //floor for dropping
-            Physics.Raycast(itemHoldSlot.transform.position, -Vector3.up, out hitDown);
+            if (Physics.Raycast(itemHoldSlot.transform.position, InteractorSource.forward, out hitDown, InteractRange))
+            {
 
-            itemCurrentlyHolding.transform.position = hitDown.point + new Vector3(transform.forward.x, 0, transform.forward.z);
+            }
+            else
+            {
+                Physics.Raycast(itemHoldSlot.transform.position, -Vector3.up, out hitDown);
+            }
+
+            itemCurrentlyHolding.transform.position = hitDown.point; //+ new Vector3(transform.forward.x, 0, transform.forward.z);
             itemCurrentlyHolding = null;
         }
     }
 
+    public void DeleteHeldItem()
+    {
+        if(isHolding)
+        {
+            GameObject.Destroy(itemCurrentlyHolding);
+            isHolding = false;
+            itemCurrentlyHolding = null;
+        }
+    }
     #endregion
 }
 

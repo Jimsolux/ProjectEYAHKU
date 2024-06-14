@@ -49,7 +49,6 @@ public class PlayerMovement : MonoBehaviour
         if(Input.GetButtonDown("Jump") && isGrounded)
         {
             velocity.y = Mathf.Sqrt(jumpHeight * 2f * gravity);
-            Debug.Log("ATTEMPTING TO JUMP");
         }
 
         velocity.y -= gravity * 2 * Time.deltaTime;
@@ -72,7 +71,7 @@ public class PlayerMovement : MonoBehaviour
     {
         if(hittableObject != punchThing) 
         { 
-        Debug.Log(punchThing.name + " has been set as object in player");
+        //Debug.Log(punchThing.name + " has been set as object in player");
         hittableObject = punchThing;
         }
     }

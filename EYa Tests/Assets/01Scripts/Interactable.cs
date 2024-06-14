@@ -30,11 +30,11 @@ public class Interactable : MonoBehaviour
 
     public void DisableOutline()
     {
-        outline.enabled = false;
+        //outline.enabled = false;
     }
 
     public void EnableOutline()
     {
-        outline.enabled = true;
+        //outline.enabled = true;
     }
 }
