@@ -33,8 +33,13 @@ public class Interactor : MonoBehaviour
             Debug.Log("Should Check interaction");
             currentInteractable.Interact();
         }
+        if(Input.GetKey(KeyCode.P) && isHolding)
+        {
+            HoldItemInAir();
+        }
 
         if (Input.GetKey(KeyCode.Z)) PickupItem();
+        if (Input.GetMouseButtonDown(0)) PickupItem();
         if (Input.GetKey(KeyCode.X)) DropItem();
 
         //if(itemBeingSeen != null)
@@ -114,8 +119,11 @@ public class Interactor : MonoBehaviour
         Debug.Log("Actually set the new currentinteractable");
         if (itemCurrentlyHolding != null)
         {
-            currentInteractableID = itemCurrentlyHolding.GetComponent<ObjectID>().myID;
-            Debug.Log("I took my ID from my item holding.");
+            if(itemCurrentlyHolding.GetComponent<ObjectID>() != null)
+            {
+                currentInteractableID = itemCurrentlyHolding.GetComponent<ObjectID>().myID;
+                Debug.Log("I took my ID from my item holding.");
+            }
 
         }
         canInteractCusIHaveInteractable = true;
@@ -156,10 +164,18 @@ public class Interactor : MonoBehaviour
             itemCurrentlyHolding = itemBeingSeen.transform.gameObject;
             foreach (var item in itemBeingSeen.transform.GetComponentsInChildren<Collider>()) if (item != null) { item.enabled = false; }
             foreach (var rb in itemBeingSeen.transform.GetComponentsInChildren<Rigidbody>()) if (rb != null) { rb.isKinematic = true; }
-
+            //store old scale
+            Vector3 originalScale = itemCurrentlyHolding.transform.lossyScale;
+            
             itemCurrentlyHolding.transform.parent = itemHoldSlot.transform;  // Item becomes child of playerobject
             itemCurrentlyHolding.transform.localPosition = Vector3.zero;    // sets localPosition to 0
             itemCurrentlyHolding.transform.localEulerAngles = Vector3.zero;
+            //reapplying original scale.
+            itemCurrentlyHolding.transform.localScale = new Vector3(
+            originalScale.x / itemHoldSlot.transform.lossyScale.x,
+            originalScale.y / itemHoldSlot.transform.lossyScale.y,
+            originalScale.z / itemHoldSlot.transform.lossyScale.z
+            );
 
             isHolding = true;
         }
@@ -176,18 +192,45 @@ public class Interactor : MonoBehaviour
             foreach (var rb in itemCurrentlyHolding.GetComponentsInChildren<Rigidbody>()) if (rb != null) { rb.isKinematic = false; }
             isHolding = false;
             RaycastHit hitDown; //floor for dropping
+            Vector3 dropPosition = itemHoldSlot.transform.position;
             if (Physics.Raycast(itemHoldSlot.transform.position, InteractorSource.forward, out hitDown, InteractRange))
             {
-
+                if (IsValidDropLocation(hitDown.point))
+                {
+                    dropPosition = hitDown.point;
+                }
             }
-            else
+
+            if (!IsValidDropLocation(dropPosition))
             {
-                Physics.Raycast(itemHoldSlot.transform.position, -Vector3.up, out hitDown);
+                if (Physics.Raycast(itemHoldSlot.transform.position, -Vector3.up, out hitDown))
+                {
+                    dropPosition = hitDown.point;
+                }
             }
 
             itemCurrentlyHolding.transform.position = hitDown.point; //+ new Vector3(transform.forward.x, 0, transform.forward.z);
             itemCurrentlyHolding = null;
         }
+    }
+
+    bool IsValidDropLocation(Vector3 dropPoint)
+    {
+        float objectRadius = 0.5f; // Adjust based on the object's size
+        Vector3 objectExtents = new Vector3(objectRadius, objectRadius, objectRadius);
+        Collider[] colliders = Physics.OverlapBox(dropPoint, objectExtents, Quaternion.identity);
+
+        // Check if colliders found are not the floor or the item itself
+        foreach (var collider in colliders)
+        {
+            if (collider.gameObject != itemCurrentlyHolding  )
+            {
+                if(!collider.CompareTag("Floor") || !collider.CompareTag("Furniture")){
+                    return false;
+                }
+            }
+        }
+        return true;
     }
 
     public void DeleteHeldItem()
@@ -196,6 +239,23 @@ public class Interactor : MonoBehaviour
         {
             GameObject.Destroy(itemCurrentlyHolding);
             isHolding = false;
+            itemCurrentlyHolding = null;
+        }
+    }
+
+
+    public void HoldItemInAir()
+    {
+        if (isHolding)
+        {
+            itemCurrentlyHolding.transform.parent = null;
+            foreach (var item in itemCurrentlyHolding.GetComponentsInChildren<Collider>()) if (item != null) { item.enabled = true; }
+            foreach (var rb in itemCurrentlyHolding.GetComponentsInChildren<Rigidbody>()) if (rb != null) { rb.isKinematic = true; }
+            isHolding = false;
+            GhostMagic gm = GameObject.Find("magic creature").GetComponent<GhostMagic>();
+            gm.HoldObject(itemCurrentlyHolding);
+            //position is carrypos.
+            itemCurrentlyHolding.transform.position = itemHoldSlot.transform.position;
             itemCurrentlyHolding = null;
         }
     }
