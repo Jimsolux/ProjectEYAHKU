@@ -11,6 +11,8 @@ public class DoorScript : MonoBehaviour
     Interactor myInteractor;
     //Ui stuff
     [SerializeField] GameObject closedDoorUI;
+    [SerializeField] GameObject closedDoorUI2;
+
 
     private void Awake()
     {
@@ -19,14 +21,22 @@ public class DoorScript : MonoBehaviour
     }
     public void TryOpenDoor()
     {
-        if(playerKeys.CheckKeyID() == myCorrectKeyID)
+        if(playerKeys.CheckKeyID() == myCorrectKeyID)//correct key
         {
             OpenDoor();
         }
-        else
+        else if (playerKeys.CheckKeyID() != myCorrectKeyID && playerKeys.CheckKeyID() != -1)//incorrect key, but i have a key.
+        {
+            closedDoorUI2.SetActive(true);
+            CloseSelf10Seconds cs102 = closedDoorUI2.GetComponent<CloseSelf10Seconds>();
+            cs102.StartTheCloseCountdown();
+        }
+        else if (playerKeys.CheckKeyID() == -1)//i dont have a key.
         {
             //display msg, wrong key
             closedDoorUI.SetActive(true);
+            CloseSelf10Seconds cs10 = closedDoorUI.GetComponent<CloseSelf10Seconds>();
+            cs10.StartTheCloseCountdown();
         }
     }
 
