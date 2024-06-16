@@ -56,13 +56,13 @@ public class GhostMagic : MonoBehaviour
     {
         if(currentHoldingObject != null)
         {
-            Debug.Log("RemovingMagicObject, I have a currentHoldingObject!");
+            //Debug.Log("RemovingMagicObject, I have a currentHoldingObject!");
             Transform childTransform = currentHoldingObject.transform.Find("PureMagick(Clone)");
             if (childTransform != null)
             {
                 GameObject.Destroy(childTransform.gameObject);
 
-                Debug.Log("Child found: " + childTransform.gameObject.name);
+                //Debug.Log("Child found: " + childTransform.gameObject.name);
             }
         }
     }

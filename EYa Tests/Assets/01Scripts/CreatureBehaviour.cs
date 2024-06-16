@@ -8,34 +8,40 @@ public class CreatureBehaviour : MonoBehaviour
     [SerializeField] private Transform transform2;
     [SerializeField] private Transform transform3;
     [SerializeField] private Transform transform4;
-    enum CurrentState
+    public enum CurrentState
     {
-        Spooking,
+        Idle,
+        Bedroom,
         Meeting,
-        Helping1, Helping2, Helping3,
+        Relicroom, Helping2, Helping3,
         Leaving
     }
-    CurrentState behaviourNow;
+    public CurrentState currentState;
 
     private void Awake()
     {
-        InvokeRepeating("GoToSecondLocation", 10, .05f);
+        //InvokeRepeating("GoToSecondLocation", 20, .05f);
     }
 
     private void FixedUpdate()
     {
-
+        ActBehaviour();
     }
 
     private void ActBehaviour()
     {
-        switch (behaviourNow)
+        switch (currentState)
         {
-            case CurrentState.Spooking:
+            case CurrentState.Idle:
+                break;
+            case CurrentState.Bedroom:
+                BedroomBehaviour();
                 break;
             case CurrentState.Meeting:
+                HallWayBehaviour2();
                 break;
-            case CurrentState.Helping1:
+            case CurrentState.Relicroom:
+                RelicroomBehaviour3();
                 break;
             case CurrentState.Helping2: 
                 break;
@@ -56,5 +62,48 @@ public class CreatureBehaviour : MonoBehaviour
         Debug.Log("I should be moving to loc 2 now.");
         transform.position =  Vector3.MoveTowards(transform.position, transform2.position, .03f);
     }
+    private void GoToThirdLocation()
+    {
+        Debug.Log("I should be moving to loc 3 now.");
+        transform.position = Vector3.MoveTowards(transform.position, transform3.position, .03f);
+    }
 
+    private void GoToFourthLocation()
+    {
+        Debug.Log("I should be moving to loc 4 now.");
+        transform.position = Vector3.MoveTowards(transform.position, transform4.position, .03f);
+    }
+
+
+    public void SwitchStateTo(int state)
+    {
+        currentState = (CurrentState)state;
+    }
+    //1
+    bool hasPlayedAudio1;
+    private void BedroomBehaviour()
+    {
+        if (!hasPlayedAudio1)
+        {
+            AudioCreature audio = GetComponentInChildren<AudioCreature>();
+            audio.PlayTheAudio1();
+        }
+        GoToSecondLocation();
+    }
+    //2
+    bool hasPlayedAudio2;
+    private void HallWayBehaviour2()
+    {
+        if (!hasPlayedAudio2)
+        {
+            AudioCreature audio = GetComponentInChildren<AudioCreature>();
+            audio.PlayTheAudio2();
+        }
+        GoToThirdLocation();
+    }
+
+    private void RelicroomBehaviour3()
+    {
+        GoToFourthLocation();
+    }
 }

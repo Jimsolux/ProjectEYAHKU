@@ -33,14 +33,15 @@ public class Interactor : MonoBehaviour
             Debug.Log("Should Check interaction");
             currentInteractable.Interact();
         }
-        if(Input.GetKey(KeyCode.P) && isHolding)
+        if(Input.GetKeyDown(KeyCode.P) || Input.GetKeyDown(KeyCode.Alpha1))
         {
-            HoldItemInAir();
+            if(isHolding) { HoldItemInAir(); }
+            
         }
 
-        if (Input.GetKey(KeyCode.Z)) PickupItem();
+        if (Input.GetKeyDown(KeyCode.Z)) PickupItem();
         if (Input.GetMouseButtonDown(0)) PickupItem();
-        if (Input.GetKey(KeyCode.X)) DropItem();
+        if (Input.GetKeyDown(KeyCode.X)) DropItem();
 
         //if(itemBeingSeen != null)
         //{
@@ -71,7 +72,7 @@ public class Interactor : MonoBehaviour
                     SetNewCurrentInteractable(newInteractable);
                     Debug.Log("SetCurrentInteractable");
                 }
-            else //If object is not interactable.
+             else if (hit.collider.tag != "Interactable") //If object is not interactable.
             {
                 DisableCurrentInteractable();
                 PlayerMovement.instance.hittableObject = null;
